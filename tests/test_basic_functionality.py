@@ -16,19 +16,19 @@ class TestBasicFunctionality:
         from src.tools import (
             append_block_in_page,
             create_page,
-            edit_block,
             get_all_page_content,
             get_all_pages,
             get_block_content,
             get_linked_flashcards,
             get_page_blocks,
             get_page_links,
+            update_block,
         )
 
         # Verify functions exist
         assert callable(append_block_in_page)
         assert callable(create_page)
-        assert callable(edit_block)
+        assert callable(update_block)
         assert callable(get_all_pages)
         assert callable(get_page_blocks)
         assert callable(get_block_content)

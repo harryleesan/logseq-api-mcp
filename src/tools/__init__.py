@@ -18,7 +18,7 @@ for py_file in _tools_dir.glob("*.py"):
     # Import the module
     module_name = py_file.stem
     try:
-        module = importlib.import_module(f".{module_name}", package=__package__)
+        module = importlib.import_module(f"tools.{module_name}")
 
         # Find all callable functions in the module (exclude private functions)
         for name, obj in inspect.getmembers(module, inspect.isfunction):

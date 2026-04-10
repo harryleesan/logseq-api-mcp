@@ -28,7 +28,8 @@ class TestMCPServer:
         expected_tools = [
             "append_block_in_page",
             "create_page",
-            "edit_block",
+            "update_block",
+            "remove_block",
             "get_all_pages",
             "get_page_blocks",
             "get_block_content",

@@ -133,7 +133,7 @@ LOGSEQ_API_TOKEN=your_api_token_here
 
 ## Existing Tools Architecture
 
-The project includes 6 core tools that demonstrate different patterns:
+The project includes 11 core tools that demonstrate different patterns:
 
 - **`get_all_pages`**: Simple listing with metadata
 - **`get_page_blocks`**: Hierarchical tree structure analysis
@@ -141,6 +141,11 @@ The project includes 6 core tools that demonstrate different patterns:
 - **`get_block_content`**: Detailed block content with children
 - **`get_all_page_content`**: Comprehensive page extraction
 - **`get_linked_flashcards`**: Advanced cross-page content analysis
+- **`append_block_in_page`**: Append blocks at page level
+- **`create_page`**: Create new pages with properties
+- **`update_block`**: Update existing block content and properties directly via the data layer (no UI focus required)
+- **`insert_block`**: Insert blocks as children or siblings of existing blocks (nested hierarchy)
+- **`remove_block`**: Remove a block permanently by UUID
 
 All tools follow consistent patterns:
 - Async functions returning `List[TextContent]`  

@@ -42,7 +42,7 @@ Perfect for:
 
 ## Features
 
-### 🛠️ Core Tools (9 Available)
+### 🛠️ Core Tools (10 Available)
 
 #### Read Operations
 
@@ -57,7 +57,9 @@ Perfect for:
 
 7. **`append_block_in_page`** - Append blocks to pages with positioning options
 8. **`create_page`** - Create new pages with properties and format
-9. **`edit_block`** - Edit existing blocks with content, properties, and cursor control
+9. **`update_block`** - Update existing block content and properties directly (no UI focus required)
+10. **`insert_block`** - Insert blocks as children or siblings of existing blocks
+11. **`remove_block`** - Remove a block permanently by UUID
 
 ### 🔄 Dynamic Tool Discovery
 
@@ -141,7 +143,9 @@ LOGSEQ_API_TOKEN=your_api_token_here
 | `get_linked_flashcards` | Flashcards from page + linked pages     | 20 flashcards across 2 pages         | Study material extraction      |
 | `append_block_in_page`  | Append blocks to pages with positioning | Success confirmation with details    | Content creation, organization |
 | `create_page`           | Create new pages with properties        | Page creation confirmation           | Page management, structure     |
-| `edit_block`            | Edit existing blocks with full control  | Edit confirmation with changes       | Content modification, updates  |
+| `update_block`          | Update block content/properties headlessly | Update confirmation with changes  | Content modification, updates  |
+| `insert_block`          | Insert blocks as children or siblings   | Insert confirmation with new UUID    | Nested content, hierarchy      |
+| `remove_block`          | Remove a block permanently by UUID      | Removal confirmation                 | Cleanup, delete outdated content |
 
 ## Tool Details & Examples
 
@@ -366,58 +370,114 @@ await create_page("Complete Page", properties=properties, format="markdown")
 
 ---
 
-### ✏️ `edit_block`
+### ✏️ `update_block`
 
-**Purpose:** Edit existing blocks with full control over content, properties, and behavior
+**Purpose:** Update a block's content and properties directly via the Logseq data layer — no UI focus required
 
 **Key Features:**
 
-- **Content Editing** - Modify block content with preview
-- **Property Management** - Add, update, or remove block properties
-- **Cursor Control** - Position cursor at specific locations
-- **Focus Management** - Control block focus after editing
+- **Headless Updates** - Uses `logseq.Editor.updateBlock`; works without the Logseq window in focus
+- **Content Editing** - Replace block content with new Markdown
+- **Property Management** - Optionally set block properties alongside the content update
 
 **Example Usage:**
 
 ```python
-# Edit content only
-await edit_block("block-uuid-123", content="Updated content")
+# Update content only
+await update_block("block-uuid-123", content="Updated content")
 
-# Update properties
+# Update content and properties
 properties = {"status": "completed", "priority": "high"}
-await edit_block("block-uuid-123", properties=properties)
-
-# Set cursor position and focus
-await edit_block("block-uuid-123", cursor_position=10, focus=True)
-
-# Complete edit with all options
-await edit_block("block-uuid-123",
-                content="New content",
-                properties=properties,
-                cursor_position=5,
-                focus=True)
+await update_block("block-uuid-123", content="Updated content", properties=properties)
 ```
 
 **Output Example:**
 
 ```
-✅ **BLOCK EDITED SUCCESSFULLY**
-🔑 Block UUID: block-uuid-123
+✅ **BLOCK UPDATED SUCCESSFULLY**
+🔗 Block UUID: block-uuid-123
 📝 **UPDATED CONTENT:**
-```
-
-New content
-
-```
+Updated content
 ⚙️ **UPDATED PROPERTIES:**
 • status: completed
 • priority: high
-📍 Cursor positioned at index 5
-🎯 Focus: Enabled
 🔗 **NEXT STEPS:**
-• Check your Logseq graph to see the updated block
 • Use get_block_content to verify the changes
-• Continue editing or add more content
+• Use get_page_blocks to see the block in context
+```
+
+---
+
+### 🗑️ `remove_block`
+
+**Purpose:** Permanently remove a block from the Logseq graph by UUID
+
+**Key Features:**
+
+- **Headless Deletion** - Uses `logseq.Editor.removeBlock`; works without the Logseq window in focus
+- **Irreversible** - Deletes the block and any child blocks from the data layer
+
+**Example Usage:**
+
+```python
+await remove_block("block-uuid-123")
+```
+
+**Output Example:**
+
+```
+✅ **BLOCK REMOVED SUCCESSFULLY**
+🗑️ Block UUID: block-uuid-123
+
+🔗 **NEXT STEPS:**
+• Use get_page_blocks to confirm the block is gone
+• Use get_all_pages to review the affected page
+```
+
+---
+
+### 📦 `insert_block`
+
+**Purpose:** Insert a new block as a child (indented) or sibling of any existing block, enabling nested hierarchical structures
+
+**Key Features:**
+
+- **Child Blocks** - Insert indented blocks under any parent (default behavior)
+- **Sibling Blocks** - Insert at the same level as the reference block
+- **Position Control** - Insert before or after the reference block
+- **Property Support** - Set block properties on creation
+
+**Example Usage:**
+
+```python
+# Insert as child (indented under parent block)
+await insert_block("parent-block-uuid", "Indented content")
+
+# Insert as sibling (same level)
+await insert_block("block-uuid", "Same level content", sibling=True)
+
+# Insert before the reference block as sibling
+await insert_block("block-uuid", "Before content", sibling=True, before=True)
+
+# Insert as first child of a block
+await insert_block("parent-uuid", "First child", before=True)
+
+# Insert with properties
+await insert_block("parent-uuid", "Tagged content", properties={"status": "active"})
+```
+
+**Output Example:**
+
+```
+✅ **BLOCK INSERTED SUCCESSFULLY**
+🔑 New block UUID: 682cfd19-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+🆔 New block ID: 3600
+📝 Content: Indented content
+📍 Inserted as last child of: parent-block-uuid
+🔗 **NEXT STEPS:**
+• Use insert_block with this UUID to add children under it
+• Use get_block_content to verify the new block
+• Use get_page_blocks to see the updated hierarchy
 ```
 
 ---
@@ -506,12 +566,15 @@ logseq-api-mcp/
 │       ├── get_linked_flashcards.py # Flashcard extraction tool
 │       ├── append_block_in_page.py # Block creation tool
 │       ├── create_page.py     # Page creation tool
-│       └── edit_block.py      # Block editing tool
+│       ├── update_block.py    # Block update tool (headless)
+│       ├── insert_block.py    # Block insertion tool (child/sibling)
+│       └── remove_block.py    # Block removal tool
 ├── tests/
 │   ├── conftest.py            # Shared test fixtures
 │   ├── test_append_block_in_page.py # Block creation tests
 │   ├── test_create_page.py    # Page creation tests
-│   ├── test_edit_block.py     # Block editing tests
+│   ├── test_update_block.py   # Block update tests
+│   ├── test_remove_block.py   # Block removal tests
 │   ├── test_get_tools.py      # Read operation tests
 │   ├── test_mcp_server.py     # Server validation tests
 │   ├── test_runner.py         # Test runner utility
@@ -603,7 +666,7 @@ uv run pytest tests/ --cov=src/tools --cov-report=html
 # Run specific tool tests
 uv run python tests/test_runner.py --tool append_block_in_page
 uv run python tests/test_runner.py --tool create_page
-uv run python tests/test_runner.py --tool edit_block
+uv run python tests/test_runner.py --tool update_block
 
 # Run server validation
 uv run python tests/test_mcp_server.py
@@ -611,7 +674,7 @@ uv run python tests/test_mcp_server.py
 
 **Test Coverage:**
 
-- ✅ **68 Test Cases** - Comprehensive coverage of all 9 tools
+- ✅ **68 Test Cases** - Comprehensive coverage of all 10 tools
 - ✅ **Server Health** - Ensures MCP server starts correctly
 - ✅ **Tool Discovery** - Validates automatic tool detection
 - ✅ **Dynamic Registration** - Confirms all tools are registered
@@ -635,14 +698,14 @@ uv run mcp run src/server.py
 
 ```
 🔍 Testing MCP Server Health and Tools...
-🔧 Discovered tools (auto-discovery): ['append_block_in_page', 'create_page', 'edit_block', 'get_all_page_content', 'get_all_pages', 'get_block_content', 'get_linked_flashcards', 'get_page_blocks', 'get_page_links']
+🔧 Discovered tools (auto-discovery): ['append_block_in_page', 'create_page', 'get_all_page_content', 'get_all_pages', 'get_block_content', 'get_linked_flashcards', 'get_page_blocks', 'get_page_links', 'insert_block', 'remove_block', 'update_block']
 
 🏥 Testing server health...
 ✅ Server started and responded successfully
 ✅ Dynamic tool discovery working correctly
 
 🎉 MCP Server test completed successfully!
-   📊 Tools auto-discovered: 9
+   📊 Tools auto-discovered: 10
    🏥 Server health: OK
    🔄 Dynamic discovery: OK
 ```
