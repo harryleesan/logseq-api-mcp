@@ -11,13 +11,32 @@ class TestUpdateBlock:
     """Test cases for update_block function."""
 
     @pytest.mark.asyncio
+    async def test_update_block_success_null_response(
+        self, mock_env_vars, mock_aiohttp_session
+    ):
+        """Test that a null body (Promise<void>) is treated as success, not an error."""
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value=None)
+
+        mock_aiohttp_session._post_context.__aenter__ = AsyncMock(
+            return_value=mock_response
+        )
+        mock_aiohttp_session._post_context.__aexit__ = AsyncMock(return_value=None)
+
+        result = await update_block("block-uuid-123", content="Updated content")
+
+        assert len(result) == 1
+        assert "✅ **BLOCK UPDATED SUCCESSFULLY**" in result[0].text
+
+    @pytest.mark.asyncio
     async def test_update_block_success_content(
         self, mock_env_vars, mock_aiohttp_session
     ):
         """Test successful block update with content."""
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={"success": True})
+        mock_response.json = AsyncMock(return_value=None)
 
         mock_aiohttp_session._post_context.__aenter__ = AsyncMock(
             return_value=mock_response
@@ -37,7 +56,7 @@ class TestUpdateBlock:
         """Test successful block update with content and properties."""
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={"success": True})
+        mock_response.json = AsyncMock(return_value=None)
 
         mock_aiohttp_session._post_context.__aenter__ = AsyncMock(
             return_value=mock_response

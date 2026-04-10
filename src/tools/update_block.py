@@ -54,15 +54,8 @@ async def update_block(
                         )
                     ]
 
-                result = await response.json()
-
-                if result is None:
-                    return [
-                        TextContent(
-                            type="text",
-                            text="❌ Failed to update block: No response from Logseq API",
-                        )
-                    ]
+                # updateBlock returns Promise<void>; null body is expected success.
+                await response.json()
 
                 content_preview = (
                     content[:100] + "..." if len(content) > 100 else content
